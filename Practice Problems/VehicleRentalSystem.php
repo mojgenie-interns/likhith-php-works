@@ -54,4 +54,4 @@ if($type=="Car")
             $rent=new Bike($brand,(int)$rentPerDay,(int)$engineCC);
         }
         echo "Total Rent: ".$rent->rentCalculate((int)$days);
-        ?>
+?>
