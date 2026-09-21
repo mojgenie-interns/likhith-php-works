@@ -1,89 +1,168 @@
 <?php
 
-require_once "config/Database.php";
-require_once "classes/Expense.php";
+require_once __DIR__ . "/config/Database.php";
+require_once __DIR__ . "/classes/Expense.php";
 
 $database = new Database();
-$conn = $database->connect();
+$db = $database->connect();
 
-$expense = new Expense($conn);
+$expense = new Expense($db);
 
-while (true) {
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
-    echo "\n";
-    echo "==============================\n";
-    echo "   EXPENSE MANAGEMENT SYSTEM\n";
-    echo "==============================\n";
-    echo "1. Add Expense\n";
-    echo "2. View Expenses\n";
-    echo "3. Delete Expense\n";
-    echo "4. Exit\n";
-    echo "==============================\n";
+    $title = $_POST["title"];
+    $category = $_POST["category"];
+    $description = $_POST["description"];
+    $amount = $_POST["amount"];
+    $expense_date = $_POST["expense_date"];
 
-    $choice = readline("Enter your choice: ");
+    $expense->add(
+        $title,
+        $category,
+        $description,
+        $amount,
+        $expense_date
+    );
 
-    switch ($choice) {
-
-        case "1":
-
-            $title = readline("Enter title: ");
-            $amount = (float) readline("Enter amount: ");
-            $category = readline("Enter category: ");
-            $date = readline("Enter date (YYYY-MM-DD): ");
-            $description = readline("Enter description: ");
-
-            if ($expense->add(
-                $title,
-                $amount,
-                $category,
-                $date,
-                $description
-            )) {
-                echo "\nExpense added successfully!\n";
-            } else {
-                echo "\nFailed to add expense.\n";
-            }
-
-            break;
-
-        case "2":
-
-            $result = $expense->getAll();
-
-            echo "\n";
-            echo "ID | Title | Amount | Category | Date\n";
-            echo "---------------------------------------------\n";
-
-            while ($row = $result->fetch_assoc()) {
-
-                echo $row["id"] . " | ";
-                echo $row["title"] . " | ";
-                echo $row["amount"] . " | ";
-                echo $row["category"] . " | ";
-                echo $row["expense_date"] . "\n";
-            }
-
-            break;
-
-        case "3":
-
-            $id = (int) readline("Enter expense ID to delete: ");
-
-            if ($expense->delete($id)) {
-                echo "\nExpense deleted successfully!\n";
-            } else {
-                echo "\nFailed to delete expense.\n";
-            }
-
-            break;
-
-        case "4":
-
-            echo "\nGoodbye!\n";
-            exit;
-
-        default:
-
-            echo "\nInvalid choice. Try again.\n";
-    }
+    header("Location: index.php");
+    exit;
 }
+
+$expenses = $expense->getAll();
+
+?>
+
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Expense Management System</title>
+
+    <style>
+
+        body {
+            font-family: Arial;
+            margin: 40px;
+        }
+
+        input {
+            padding: 8px;
+            margin: 5px;
+        }
+
+        button {
+            padding: 8px 15px;
+            cursor: pointer;
+        }
+
+        table {
+            margin-top: 30px;
+            border-collapse: collapse;
+            width: 80%;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid black;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<h1>Expense Management System</h1>
+
+<h2>Add Expense</h2>
+
+<form method="POST">
+
+    <input
+        type="text"
+        name="title"
+        placeholder="Title"
+        required
+    >
+
+    <input
+        type="text"
+        name="category"
+        placeholder="Category"
+        required
+    >
+
+    <input
+        type="text"
+        name="description"
+        placeholder="Description"
+        required
+    >
+
+    <input
+        type="number"
+        name="amount"
+        placeholder="Amount"
+        step="0.01"
+        required
+    >
+
+    <input
+        type="date"
+        name="expense_date"
+        required
+    >
+
+    <button type="submit">
+        Add Expense
+    </button>
+
+</form>
+
+<h2>Expenses</h2>
+
+<?php if (empty($expenses)): ?>
+
+    <p>No expenses found.</p>
+
+<?php else: ?>
+
+<table>
+
+    <tr>
+        <th>ID</th>
+        <th>Title</th>
+        <th>Category</th>
+        <th>Description</th>
+        <th>Amount</th>
+        <th>Date</th>
+    </tr>
+
+    <?php foreach ($expenses as $item): ?>
+
+    <tr>
+
+        <td><?php echo $item["id"]; ?></td>
+
+        <td><?php echo $item["title"]; ?></td>
+
+        <td><?php echo $item["category"]; ?></td>
+
+        <td><?php echo $item["description"]; ?></td>
+
+        <td>₹<?php echo $item["amount"]; ?></td>
+
+        <td><?php echo $item["expense_date"]; ?></td>
+
+    </tr>
+
+    <?php endforeach; ?>
+
+</table>
+
+<?php endif; ?>
+
+</body>
+
+</html>
